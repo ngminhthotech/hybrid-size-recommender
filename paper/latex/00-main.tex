@@ -1,0 +1,87 @@
+%% KDDT_nhom2 - Final report, Digital Business (25MIT-1A)
+%% Springer Nature LaTeX template (sn-jnl). Compile with pdfLaTeX + BibTeX.
+\documentclass[pdflatex,sn-mathphys-num]{sn-jnl}
+
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage[title]{appendix}
+\usepackage{xcolor}
+\usepackage{textcomp}
+\usepackage{manyfoot}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{pifont}
+
+\graphicspath{{figures/}}
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,columns=fullflexible}
+\raggedbottom
+
+\begin{document}
+
+\title[Overcoming Size Vanity in Online Retailing]{Overcoming Size Vanity in Online Retailing: An Intelligent Recommendation System for Apparel Fit}
+
+\author*[1]{\fnm{Nguyen-Minh} \sur{Duy}}\email{duyfc11126@gmail.com}
+\author[1]{\fnm{Tu-The} \sur{Hien}}\email{tuthehien2618@gmail.com}
+\author[1]{\fnm{Nguyen-Minh} \sur{Tho}}\email{ngminhthotech@gmail.com}
+\author[1]{\fnm{Tran-Anh} \sur{Tuan}}\email{trananhtuan131481176@gmail.com}
+\author[1]{\fnm{Nguyen-Thanh} \sur{Toan}}\email{thanhtoanhgtv@gmail.com}
+
+\affil[1]{\orgname{Nam Can Tho University}, \orgaddress{\city{Can Tho}, \country{Vietnam}}}
+
+\abstract{Size-related returns are one of the largest costs of online fashion retail, because shoppers cannot try garments on and the same size label means different dimensions across brands and product lines (``size vanity''). We study fit prediction (\emph{small}, \emph{fit} or \emph{large}) and size recommendation, focusing on new customers and customers with very little purchase history (cold-start). We propose a \emph{hybrid ordinal matrix factorization} model that projects self-reported body measurements (height, weight, bust, hips, body type, etc.) into the same latent space as the collaborative user factors learned from purchase history, adds explicit product features and a size-gap feature, and uses ID dropout so that one model serves both new and returning customers. To choose a concrete size, the fit model is combined with a monotone and interpretable size-selection model, which avoids the selection bias of observational fit data. Experiments on ModCloth (82,790 transactions) and RentTheRunway (192,544 transactions) compare seven configurations under user-disjoint (cold-start) and random (warm) splits, with ten repetitions (seeds), paired bootstrap and paired t-tests. On new users the proposed model reaches an AUC of 0.679 and 0.731, significantly above plain MF (0.661 and 0.722) and MF with body features (0.674 and 0.724). For users with two to four past purchases it outperforms a strong body-and-product model by 0.015 and 0.007 AUC. The share of recommendations that exactly match the size the customer wore rises from 25.5\% to 51.0\% on ModCloth and from 20.9\% to 44.5\% on RentTheRunway compared with recommending the best-selling size, and 92\% and 82\% of recommendations are within one size. The full pipeline is released as the reproducible command-line tool \texttt{sizerec}.}
+
+\keywords{size recommendation, fit prediction, matrix factorization, cold-start, body measurements, ordinal regression, fashion e-commerce}
+
+\maketitle
+
+% ====================================================================== INTRODUCTION
+\section{Introduction}\label{sec1}
+
+E-commerce has changed how people buy clothing, and apparel is now one of the largest online retail categories. Unlike books or electronics, however, a garment only has value if it fits, and fit depends on the interaction between an individual body and the cut of a specific article. Online shoppers cannot try garments on before buying. Many of them respond by ordering the same item in several sizes and sending back the ones that do not fit, a behaviour known as \emph{bracketing}. Size and fit are widely reported as the leading reason for returns in online fashion~\cite{sheikh2019sfnet,nestler2021sizeflags}. Every return costs the retailer two-way shipping, inspection and repackaging, inventory that loses value over the season, and customer goodwill, and it adds avoidable transport emissions.
+
+The core difficulty is that size labels are not standardised. The same label (for example size 8 or M) corresponds to different body dimensions across brands, and even across product lines of the same brand (slim-fit versus oversized); brands also tend to label garments with smaller sizes than their actual dimensions, a practice often called \emph{size vanity}. A shopper's size at one brand is therefore a weak guide to her size at another, and static size charts do not solve the problem.
+
+Recommender systems offer two families of solutions. \emph{Content-based} approaches match body measurements against product specifications, but ignore personal preferences: two customers with the same measurements may prefer different sizes because one likes a loose fit and the other a tight one. \emph{Collaborative filtering}, typically matrix factorization (MF), learns such preferences from purchase and feedback history, but needs history that most customers do not have: in the public datasets used in this study about two thirds of users have a single transaction, and a new customer has none. This cold-start setting is exactly where a size recommendation is most needed.
+
+Many platforms already ask customers to enter a few body measurements, which are available from the very first visit. This paper studies how to integrate these self-reported measurements \emph{directly} into the user representation of matrix factorization, so that a single model relies on the body when there is no history and exploits history when it exists. Our contributions are:
+\begin{enumerate}
+\item A \textbf{hybrid ordinal MF} model in which the user vector is the sum of a collaborative latent factor and a non-linear projection of body measurements, complemented by explicit product features, a size-gap feature, and ID dropout for a smooth transition between new and returning users.
+\item A \textbf{controlled evaluation} with seven configurations (including ablations), user-disjoint and random protocols, ten repetitions with different seeds, a breakdown by the amount of user history, and paired significance tests on two public datasets.
+\item A \textbf{monotone, interpretable size-selection procedure}, separated from fit prediction to avoid selection bias, evaluated with a metric directly related to size-related returns.
+\item An open, reproducible \textbf{command-line system}, \texttt{sizerec}, that trains, evaluates and explains size recommendations.
+\end{enumerate}
+
+\paragraph{Scope.} ModCloth and RentTheRunway provide fit feedback but no ``returned'' label or return reason per transaction. We therefore evaluate fit prediction and the ability to recommend the right size, which are the direct causes of size-related returns, but we do not claim a specific reduction in return rate; that requires an A/B test on a live store.
+
+The remainder of the paper is organised as follows. Section~\ref{sec2} reviews related work, Section~\ref{sec3} describes the data, Section~\ref{sec4} presents the method, Section~\ref{sec5} the experimental setup and Section~\ref{sec6} the results. Section~\ref{sec7} describes the system and Section~\ref{sec8} concludes.
+
+\input{01-body}
+
+\backmatter
+
+\bmhead{Acknowledgements}
+The authors thank the lecturer of the Digital Business course for guidance throughout the project.
+
+\section*{Declarations}
+\begin{itemize}
+\item \textbf{Data availability.} ModCloth and RentTheRunway are publicly available from the Clothing Fit Dataset of Misra et al.~\cite{misra2018fit}.
+\item \textbf{Code availability.} Source code, scripts, logs and all experimental results are provided in the project repository (folders \texttt{03-code} and \texttt{04-results}).
+\end{itemize}
+
+\begin{appendices}
+\section{Reproducing the experiments}\label{secA1}
+From the \texttt{03-code} folder of the repository:
+\begin{lstlisting}
+pip install -r requirements.txt && pip install -e .
+bash scripts/run_all.sh        # Linux / macOS / Git Bash
+scripts\run_all.bat            # Windows
+\end{lstlisting}
+The script computes dataset statistics, runs the pipeline test, the full experiments (7 models, 2 protocols, 10 seeds, significance tests), trains the final models, runs recommendation examples, and regenerates every figure and the summary spreadsheet in \texttt{04-results}.
+\end{appendices}
+
+\bibliography{01-ref}
+
+\end{document}
