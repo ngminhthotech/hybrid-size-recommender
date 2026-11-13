@@ -1,14 +1,9 @@
-<div align="center">
+<p align="center"><img src="docs/assets/banner.svg" alt="Hybrid Size Recommender" width="100%"></p>
 
-# 👗 sizerec
-
-### Khắc phục "size ảo" trong bán lẻ thời trang trực tuyến: hệ thống gợi ý size thông minh
-
-**Mô hình phân rã ma trận lai (hybrid ordinal MF) biến vài số đo cơ thể do khách tự khai thành gợi ý size, ngay từ lần mua đầu tiên.**
-
-[English](README.md) · [Bài báo (PDF)](paper/sizerec-paper.pdf) · [Notebook](notebooks/sizerec_demo.ipynb)
-
-</div>
+<p align="center">
+  <b>Mô hình phân rã ma trận lai (hybrid ordinal MF) biến vài số đo cơ thể do khách tự khai thành gợi ý size, ngay từ lần mua đầu tiên.</b><br>
+  <a href="README.md">English</a> · <a href="paper/sizerec-paper.pdf">Bài báo (PDF)</a> · <a href="notebooks/sizerec_demo.ipynb">Notebook</a>
+</p>
 
 ---
 
@@ -34,6 +29,8 @@ Trung bình ± độ lệch chuẩn qua **10 lần lặp** với các cách chia
 ## Cài đặt và chạy thử
 
 ```bash
+git clone https://github.com/ngminhthotech/hybrid-size-recommender.git
+cd hybrid-size-recommender
 pip install -r requirements.txt && pip install -e .
 sizerec                       # menu tương tác
 sizerec recommend results/models/rtr.pt --item 126335 \
