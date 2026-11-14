@@ -61,7 +61,7 @@ Figure~\ref{fig:data} highlights two properties. First, the labels are dominated
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\textwidth]{fig1_data_overview.png}
+\includegraphics[width=0.9\textwidth]{fig1_data_overview.png}
 \caption{Distribution of fit labels (left) and share of missing values per body measurement (right)}\label{fig:data}
 \end{figure}
 
@@ -148,7 +148,7 @@ The proposed model is compared with every other model by a \textbf{paired t-test
 \section{Results and Discussion}\label{sec6}
 
 \subsection{Cold-start}
-Table~\ref{tab:cold} and Figure~\ref{fig:cold} report results on new users. The proposed model achieves the highest AUC on both datasets, tied only with its own no-dropout ablation.
+Table~\ref{tab:cold} reports results on new users. The proposed model achieves the highest AUC on both datasets, tied only with its own no-dropout ablation.
 
 \begin{table}[h]
 \caption{Cold-start protocol (mean $\pm$ std over 10 seeds; the proposed model is in bold)}\label{tab:cold}
@@ -168,12 +168,6 @@ Model & AUC & Macro-F1 & AUC & Macro-F1 \\
 \botrule
 \end{tabular*}
 \end{table}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=\textwidth]{fig2_auc_cold_start.png}
-\caption{AUC under the cold-start protocol (new users)}\label{fig:cold}
-\end{figure}
 
 Body measurements mitigate cold-start: adding them to MF (\texttt{mf} $\rightarrow$ \texttt{mf\_body}) raises AUC by 0.013 on ModCloth and 0.002 on RTR, and adding product features (\texttt{mf\_body} $\rightarrow$ \texttt{mf\_body\_product}) adds a further 0.005 and 0.007. A linear model is not enough: \texttt{body\_lr} reaches only 0.585 and 0.620, because fit depends on the \emph{interaction} between a body and a specific item--size, not on either alone. For completely new users the proposed model and \texttt{body\_product} are close, which is expected since the two share the same form when $m_u = 0$.
 
@@ -199,29 +193,23 @@ Test size & 3,571 & 1,782 & 1,998 & 943 & 8,293 & 7,997 & 3,662 & 4,026 & 3,584 
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\textwidth]{fig3_auc_by_history.png}
+\includegraphics[width=0.85\textwidth]{fig3_auc_by_history.png}
 \caption{AUC by number of past transactions of the user (warm protocol)}\label{fig:hist}
 \end{figure}
 
 Once users have history, the gap between the proposed model and \texttt{body\_product} widens: +0.015 on ModCloth and +0.007 on RTR for users with 2--4 transactions, and +0.013 and +0.014 for users with 5 or more. The collaborative factor $p_u$ therefore captures personal preferences that measurements do not express. For users with no history the proposed model is still the best, so adding the collaborative part does not hurt new users. This is exactly the desired behaviour of a hybrid: \emph{rely on the body when there is no history, and exploit history when it exists}.
 
 \subsection{Stability across repetitions}
-Figure~\ref{fig:box} shows the distribution of test AUC over the ten repetitions for the five strongest configurations under both protocols (\texttt{majority} and \texttt{body\_lr} are omitted because their AUC is far lower and would compress the scale). Each point is one repetition with its own data split. The ranking is stable: the box of the proposed model lies to the right of plain MF and MF with body features in every panel, and under the warm protocol it is also clearly separated from \texttt{body\_product}. Under cold-start the boxes of the proposed model and \texttt{body\_product} overlap, which matches the small differences in Table~\ref{tab:cold}. The boxes of the proposed model and its no-dropout ablation almost coincide everywhere, in line with the ablation result below. The standard deviation between repetitions (about 0.003--0.007 AUC) is of the same order as the gaps between the strongest models, which is why ten repetitions and paired tests are needed before drawing conclusions.
+Figure~\ref{fig:box} shows test AUC over the ten repetitions for the five strongest configurations (\texttt{majority} and \texttt{body\_lr} are omitted to keep the scale readable); each point is one repetition with its own data split. The ranking is stable: the proposed model lies to the right of plain MF and MF with body features in every panel and, under the warm protocol, also clearly separates from \texttt{body\_product}; under cold-start the two overlap, matching Table~\ref{tab:cold}. The spread between repetitions (about 0.003--0.007 AUC) is of the same order as the gaps between the strongest models, which is why ten repetitions and paired tests are needed.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\textwidth]{fig6_auc_boxplot.png}
+\includegraphics[width=0.9\textwidth]{fig6_auc_boxplot.png}
 \caption{Boxplots of test AUC over ten repetitions (seeds 1--10) per model, dataset and protocol; the proposed model is shown in blue}\label{fig:box}
 \end{figure}
 
 \subsection{Statistical significance}
-Figure~\ref{fig:sig} and Table~\ref{tab:sig} report $\Delta$AUC of the proposed model against the other models.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=\textwidth]{fig4_significance_delta_auc.png}
-\caption{$\Delta$AUC with 95\% confidence intervals (paired bootstrap) of the proposed model against each model}\label{fig:sig}
-\end{figure}
+Table~\ref{tab:sig} reports $\Delta$AUC of the proposed model against the other models, with 95\% confidence intervals from the paired bootstrap.
 
 \begin{table}[h]
 \caption{$\Delta$AUC of the proposed model on the full test set}\label{tab:sig}
@@ -249,7 +237,7 @@ RTR & \texttt{body\_product} & warm & +0.006 & [0.005, 0.007] & $<$0.01 / $<$0.0
 The proposed model is significantly better than \texttt{mf}, \texttt{mf\_body} and \texttt{body\_lr} on both datasets and both protocols. Against \texttt{body\_product} the difference is significant under the warm protocol on both datasets (both tests $p < 0.001$) and under cold-start on RTR, but not under cold-start on ModCloth ($p = 0.08$ bootstrap, $0.24$ t-test), consistent with the analysis above: without history the two models share the same form. Removing ID dropout does not change the results significantly ($p > 0.28$): the mechanism does no harm, but gives no clear benefit on these two datasets.
 
 \subsection{Size recommendation}
-Table~\ref{tab:sizerec} and Figure~\ref{fig:sizerec} compare three ways of recommending a size: the best-selling size of the article (what many shops do today), body measurements only, and body measurements combined with purchase history (hybrid).
+Table~\ref{tab:sizerec} compares three ways of recommending a size: the best-selling size of the article (what many shops do today), body measurements only, and body measurements combined with purchase history (hybrid).
 
 \begin{table}[h]
 \caption{Size recommendation accuracy on \emph{fit} test transactions (warm, mean $\pm$ std over 10 seeds)}\label{tab:sizerec}
@@ -266,12 +254,6 @@ Body measurements only & 44.0 $\pm$ 0.7 & 87.7 $\pm$ 0.3 & 39.7 $\pm$ 0.4 & 79.0
 \end{tabular*}
 \end{table}
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=\textwidth]{fig5_size_recommendation.png}
-\caption{Size recommendation accuracy by method}\label{fig:sizerec}
-\end{figure}
-
 Body measurements alone almost double the exact-match rate of the best-selling size (25.5\% $\rightarrow$ 44.0\% on ModCloth, 20.9\% $\rightarrow$ 39.7\% on RTR). Adding purchase history adds a further 7.0 points on ModCloth and 4.8 points on RTR. Under cold-start the hybrid and body-only methods coincide because $n_u = 0$ (44.0\% and 40.1\%). Within one size step, the hybrid method reaches 92\% and 82\%, so the recommended size is almost always the size the customer wore or an adjacent one.
 
 \subsection{Discussion}
@@ -284,26 +266,9 @@ Body measurements alone almost double the exact-match rate of the best-selling s
 % ====================================================================== SYSTEM
 \section{The \texttt{sizerec} System}\label{sec7}
 
-The method is implemented in Python (PyTorch, pandas, scikit-learn) and packaged as the command-line tool \texttt{sizerec} (Table~\ref{tab:modules}).
+The method is implemented in Python (PyTorch, pandas, scikit-learn) and packaged as the command-line tool \texttt{sizerec}, organised into modules for data handling (\texttt{data.py}), the model and baselines (\texttt{model.py}), training (\texttt{trainer.py}), multi-seed experiments and significance tests (\texttt{experiment.py}), monotone size selection (\texttt{sizing.py}), recommendation with risk and explanations (\texttt{recommend.py}), and the command-line and interactive interfaces (\texttt{cli.py}, \texttt{interactive.py}).
 
-\begin{table}[h]
-\caption{System modules}\label{tab:modules}
-\begin{tabular*}{\textwidth}{@{\extracolsep\fill}lp{9cm}}
-\toprule
-Module & Responsibility \\
-\midrule
-\texttt{data.py} & Loading, cleaning, unit conversion, encoding of measurements; size regression \\
-\texttt{model.py} & Hybrid ordinal MF and the compared configurations \\
-\texttt{trainer.py} & Training, early stopping, prediction, logistic-regression baseline, saving and loading \\
-\texttt{experiment.py} & Multi-seed experiments, two protocols, significance tests, reports \\
-\texttt{sizing.py} & Monotone size selection and its evaluation \\
-\texttt{recommend.py} & Size recommendation, risk estimation and explanations \\
-\texttt{cli.py}, \texttt{interactive.py} & Command-line interface and interactive menu \\
-\botrule
-\end{tabular*}
-\end{table}
-
-The commands are \texttt{data} (dataset statistics), \texttt{experiment} (experiments and tests), \texttt{train}, \texttt{inspect} and \texttt{recommend}, which can explain its output (\texttt{--explain}) or emit JSON (\texttt{--json}) for integration with other systems. Running \texttt{sizerec} without arguments opens an interactive menu that asks for the article, the type of customer (new or returning) and each measurement, any of which can be skipped.
+The commands are \texttt{data} (dataset statistics), \texttt{experiment} (experiments and tests), \texttt{train}, \texttt{inspect} and \texttt{recommend}, which can explain its output (\texttt{--explain}) or emit JSON (\texttt{--json}) for integration with other systems. Without arguments, \texttt{sizerec} opens an interactive menu.
 
 \paragraph{Example.} A new customer aged 22, 165\,cm and 57\,kg, bra size 34b, petite, looks at a dress on RTR:
 \begin{verbatim}
@@ -313,7 +278,7 @@ sizerec recommend models/rtr.pt --item 126335 --height 165cm \
 \end{verbatim}
 The base size estimated from the measurements is about 6.2. The system adds 0.3 for the dress category and 0.6 because, according to earlier customers, this article runs small, giving a target of about 7.1, so the closest available size is \textbf{8}. The hybrid model estimates fit 47\%, loose 30\% and tight 23\% at size 8. The loose risk is somewhat high, but the next smaller size (4) has a lower probability of fitting (41\%), so the system keeps size 8. The explanation decomposes the score $t$ into the item--size bias, the collaborative history (zero for a new customer), the body measurements and the size gap, so that the merchant can see why the recommendation was made. For a returning customer with 386 transactions, the weight of the history in the target size is $386/388 \approx 1$ and the collaborative term is non-zero, so the recommendation reflects that customer's own sizing habits.
 
-All experiments can be reproduced with a single script (\texttt{run\_all.sh} or \texttt{run\_all.bat}) with fixed seeds. Results, logs, figures and a summary spreadsheet are written to the \texttt{04-results} folder of the repository.
+All experiments can be reproduced with a single script (\texttt{run\_all.sh} or \texttt{run\_all.bat}) with fixed seeds. It computes dataset statistics, runs the pipeline test and the full experiments (7 models, 2 protocols, 10 seeds, significance tests), trains the final models and regenerates every figure, log and the summary spreadsheet in the \texttt{results} folder of the repository.
 
 % ====================================================================== CONCLUSION
 \section{Conclusion}\label{sec8}

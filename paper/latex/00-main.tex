@@ -71,17 +71,6 @@ The authors thank the lecturer of the Digital Business course for guidance throu
 \item \textbf{Code availability.} Source code, scripts, logs and all experimental results are provided in the project repository (folders \texttt{03-code} and \texttt{04-results}).
 \end{itemize}
 
-\begin{appendices}
-\section{Reproducing the experiments}\label{secA1}
-From the \texttt{03-code} folder of the repository:
-\begin{lstlisting}
-pip install -r requirements.txt && pip install -e .
-bash scripts/run_all.sh        # Linux / macOS / Git Bash
-scripts\run_all.bat            # Windows
-\end{lstlisting}
-The script computes dataset statistics, runs the pipeline test, the full experiments (7 models, 2 protocols, 10 seeds, significance tests), trains the final models, runs recommendation examples, and regenerates every figure and the summary spreadsheet in \texttt{04-results}.
-\end{appendices}
-
 \bibliography{01-ref}
 
 \end{document}
