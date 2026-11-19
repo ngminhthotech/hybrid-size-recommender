@@ -3,11 +3,11 @@ message: "If you use this software, please cite it as below."
 title: "sizerec: Overcoming Size Vanity in Online Retailing with Hybrid Matrix Factorization"
 authors:
   - family-names: Nguyen
+    given-names: Minh Tho
+  - family-names: Nguyen
     given-names: Minh Duy
   - family-names: Tu
     given-names: The Hien
-  - family-names: Nguyen
-    given-names: Minh Tho
   - family-names: Tran
     given-names: Anh Tuan
   - family-names: Nguyen

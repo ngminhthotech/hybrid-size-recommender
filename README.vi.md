@@ -53,6 +53,6 @@ bash scripts/run_all.sh       # chạy lại toàn bộ thực nghiệm (Windows
 
 ## Nhóm thực hiện
 
-Nguyen Minh Duy · Tu The Hien · Nguyen Minh Tho · Tran Anh Tuan · Nguyen Thanh Toan
+Nguyen Minh Tho (tác giả chính) · Nguyen Minh Duy · Tu The Hien · Tran Anh Tuan · Nguyen Thanh Toan
 
 Học phần *Kinh doanh số*, Thạc sĩ Công nghệ thông tin, Trường Đại học Nam Cần Thơ.

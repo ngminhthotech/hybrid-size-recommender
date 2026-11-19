@@ -205,7 +205,8 @@ hybrid-size-recommender/
 │   ├── recommend.py    recommendation, risk and explanations
 │   └── cli.py          command-line interface (+ interactive.py)
 ├── tests/              end-to-end smoke test on synthetic data
-├── scripts/            run_all, quick run, demo, figures, Excel export
+├── scripts/            run_all, quick run, demo, figures, Excel export, verify_workflow
+├── docs/workflow/      workflow diagram ↔ code mapping (Vietnamese)
 ├── notebooks/          Jupyter walkthrough
 ├── data/               ModCloth and RentTheRunway (Misra et al., 2018)
 ├── results/            metrics, figures, logs, trained models
@@ -229,7 +230,7 @@ Python · PyTorch · pandas · NumPy · scikit-learn · SciPy · Rich (CLI) · M
 ```bibtex
 @misc{hybridsizerec2026,
   title  = {Overcoming Size Vanity in Online Retailing: An Intelligent Recommendation System for Apparel Fit},
-  author = {Nguyen Minh Duy and Tu The Hien and Nguyen Minh Tho and Tran Anh Tuan and Nguyen Thanh Toan},
+  author = {Nguyen Minh Tho and Nguyen Minh Duy and Tu The Hien and Tran Anh Tuan and Nguyen Thanh Toan},
   year   = {2026},
   note   = {Nam Can Tho University},
   url    = {https://github.com/ngminhthotech/hybrid-size-recommender}
@@ -238,7 +239,7 @@ Python · PyTorch · pandas · NumPy · scikit-learn · SciPy · Rich (CLI) · M
 
 ## Authors
 
-**Nguyen Minh Duy** · **Tu The Hien** · **Nguyen Minh Tho** · **Tran Anh Tuan** · **Nguyen Thanh Toan**
+**Nguyen Minh Tho** (corresponding author) · **Nguyen Minh Duy** · **Tu The Hien** · **Tran Anh Tuan** · **Nguyen Thanh Toan**
 
 Master of Information Technology, Nam Can Tho University, Vietnam. Developed for the *Digital Business* course.
 
