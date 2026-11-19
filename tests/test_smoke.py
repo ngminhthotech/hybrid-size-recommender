@@ -16,6 +16,7 @@ from sizerec.cli import main  # noqa: E402
 
 
 def make_synthetic(path, n=3000, seed=0):
+    """Tạo dữ liệu giả lập dạng RTR: size "đúng" phụ thuộc cân nặng, nhãn fit theo độ lệch size."""
     rng = random.Random(seed)
     items = {str(1000 + i): rng.choice(["dress", "gown", "top"]) for i in range(40)}
     with gzip.open(path, "wt", encoding="utf-8") as f:
@@ -35,6 +36,7 @@ def make_synthetic(path, n=3000, seed=0):
 
 
 def test_pipeline():
+    """Chạy lần lượt các lệnh data, experiment --quick, train, inspect, recommend; tất cả phải trả mã 0."""
     with tempfile.TemporaryDirectory() as d:
         data = os.path.join(d, "renttherunway_synthetic.json.gz")
         make_synthetic(data)

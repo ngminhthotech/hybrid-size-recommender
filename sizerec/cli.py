@@ -1,13 +1,15 @@
-"""Giao diện dòng lệnh `sizerec`.
+"""
 
-    sizerec info                                   Thông tin phiên bản, môi trường, danh sách mô hình
-    sizerec data        DATA                       Thống kê bộ dữ liệu
-    sizerec experiment  DATA [tuỳ chọn]            Thực nghiệm so sánh + kiểm định thống kê
-    sizerec train       DATA [tuỳ chọn]            Huấn luyện và lưu mô hình đề xuất
-    sizerec inspect     MODEL                      Xem thông tin mô hình đã lưu
-    sizerec recommend   MODEL --item ID [...]      Gợi ý size (người dùng cũ hoặc khách mới theo số đo)
+cli.py — GIAO DIỆN DÒNG LỆNH, ĐIỂM VÀO CỦA CHƯƠNG TRÌNH
 
-Gõ `sizerec <lệnh> -h` để xem chi tiết từng lệnh.
+MỤC LỤC
+    Phần A. Hàm phụ ............ _add_hparams, _hparams, _apply_id_drop, _check_file, _load, _fmt
+    Phần B. Các lệnh ........... cmd_info, cmd_data, cmd_experiment, cmd_train, cmd_inspect, cmd_recommend
+    Phần C. Khai báo + chạy .... build_parser, main   <- CHƯƠNG TRÌNH BẮT ĐẦU Ở main()
+
+LUỒNG CHẠY
+    python -m sizerec <lệnh> ...  ->  __main__.py  ->  main()  ->  hàm cmd_<lệnh>()
+    Không gõ lệnh nào             ->  mở menu tương tác (interactive.py)
 """
 
 from __future__ import annotations
@@ -20,9 +22,11 @@ import sys
 import time
 from datetime import datetime
 
+# phiên bản gói (sizerec/__init__.py) và lớp in ra màn hình (ui.py)
 from . import __version__
 from .ui import UI
 
+# Đoạn chữ in ở cuối khi gõ `sizerec -h` (ví dụ cách dùng)
 EPILOG = """Gõ `sizerec` (không tham số) để mở chế độ tương tác dạng menu.
 
 Ví dụ:
@@ -34,8 +38,11 @@ Ví dụ:
 """
 
 
-# ============================================================================ helpers
+# ════════════════════════════════════════════════════════════════════════════
+#  PHẦN A. HÀM PHỤ
+# ════════════════════════════════════════════════════════════════════════════
 def _add_hparams(p):
+    """Thêm nhóm tham số "siêu tham số" (--dim, --lr, --l2, --batch, --epochs, --patience, --id-drop)"""
     g = p.add_argument_group("siêu tham số")
     g.add_argument("--dim", type=int, default=16, help="số chiều không gian ẩn (mặc định: 16)")
     g.add_argument("--lr", type=float, default=3e-3, help="learning rate Adam (mặc định: 3e-3)")
@@ -47,11 +54,13 @@ def _add_hparams(p):
 
 
 def _hparams(a):
+    """Đọc các tham số --dim, --lr... người dùng gõ và đóng gói thành HParams (trainer.py)."""
     from .trainer import HParams
     return HParams(dim=a.dim, lr=a.lr, l2=a.l2, batch=a.batch, epochs=a.epochs, patience=a.patience)
 
 
 def _apply_id_drop(value):
+    """Đặt xác suất ID dropout (--id-drop) cho 2 cấu hình mf_body và mf_body_product."""
     from dataclasses import replace
     from . import model as M
     for k in ["mf_body", "mf_body_product"]:
@@ -59,15 +68,18 @@ def _apply_id_drop(value):
 
 
 def _check_file(ui, path):
+    """Báo lỗi và thoát với mã 2 nếu không tìm thấy file."""
     if not os.path.isfile(path):
         ui.error(f"Không tìm thấy file: {path}")
         sys.exit(2)
 
 
 def _load(ui, path):
+    """Nạp + làm sạch bộ dữ liệu (data.load_dataset) và in 1 dòng thống kê ngắn."""
     from .data import load_dataset
     _check_file(ui, path)
     t0 = time.time()
+    # đọc + làm sạch (data.py, bước 1–2)
     data = load_dataset(path)
     ui.ok(f"Đã nạp [bold]{data.name}[/bold]: {len(data):,} tương tác, "
           f"{data.df.user_id.nunique():,} người dùng, {data.df.item_id.nunique():,} sản phẩm ({time.time() - t0:.1f}s)")
@@ -75,11 +87,15 @@ def _load(ui, path):
 
 
 def _fmt(x, nd=4):
+    """Định dạng số với nd chữ số thập phân; NaN in thành "—" (mẹo: NaN != NaN)."""
     return "—" if x != x else f"{x:.{nd}f}"
 
 
-# ============================================================================ commands
+# ════════════════════════════════════════════════════════════════════════════
+#  PHẦN B. CÁC LỆNH  (mỗi lệnh con = 1 hàm cmd_*)
+# ════════════════════════════════════════════════════════════════════════════
 def cmd_info(a, ui):
+    """Lệnh `sizerec info`: in phiên bản thư viện, thiết bị (CPU/CUDA) và danh sách mô hình có sẵn."""
     import numpy, pandas, sklearn, torch
     from .model import DESCRIPTIONS, PROPOSED
     ui.header(f"sizerec {__version__}", "Hybrid Matrix Factorization cho gợi ý size thời trang")
@@ -92,8 +108,10 @@ def cmd_info(a, ui):
 
 
 def cmd_data(a, ui):
+    """Lệnh `sizerec data DATA`: thống kê bộ dữ liệu."""
     from .data import LEAKY_FIELDS, describe
     data = _load(ui, a.data)
+    # describe(): thống kê mô tả (data.py)
     d = describe(data)
     if a.json:
         print(json.dumps(d, ensure_ascii=False, indent=2))
@@ -109,12 +127,15 @@ def cmd_data(a, ui):
 
 
 def cmd_experiment(a, ui):
+    """Lệnh `sizerec experiment DATA`: thực nghiệm so sánh + kiểm định."""
     import torch
     from .experiment import DEFAULT_MODELS, run_experiment, write_outputs
     from .data import describe
     from .model import SPECS
+    # --quick: chạy thử nhanh (chỉ cold-start, 1 seed, 50 lần bootstrap)
     if a.quick:
         a.protocols, a.seeds, a.boot = ["cold"], [1], 50
+    # kiểm tra tên mô hình người dùng gõ có hợp lệ không
     bad = [m for m in a.models if m not in SPECS and m not in ("majority", "body_lr")]
     if bad:
         ui.error(f"Mô hình không hợp lệ: {', '.join(bad)}. Xem `sizerec info`.")
@@ -122,15 +143,18 @@ def cmd_experiment(a, ui):
     _apply_id_drop(a.id_drop)
     data = _load(ui, a.data)
     hp = _hparams(a)
+    # thư mục kết quả mặc định: results/<tên dữ liệu>_<ngày giờ>
     outdir = a.out_dir or os.path.join("results", f"{data.name}_{datetime.now():%Y%m%d_%H%M%S}")
     ui.header(f"Thực nghiệm trên {data.name}",
               f"giao thức: {', '.join(a.protocols)} · seeds: {a.seeds} · {len(a.models)} mô hình · "
               f"bootstrap: {a.boot} · CPU {torch.get_num_threads()} luồng")
     t0 = time.time()
     res, sig, size_df = run_experiment(data, a.protocols, a.seeds, a.models, hp, log=ui.log, n_boot=a.boot)
+    # ghi lại cấu hình để có thể chạy lại đúng như vậy (config.json)
     config = {"dataset": data.name, "data_path": os.path.abspath(a.data), "protocols": a.protocols, "seeds": a.seeds,
               "models": a.models, "hparams": hp.to_dict(), "id_drop": a.id_drop, "bootstrap": a.boot,
               "version": __version__, "finished": datetime.now().isoformat(timespec="seconds")}
+    # ghi các file CSV + report.md, rồi in bảng tóm tắt ra màn hình
     summ = write_outputs(outdir, describe(data), res, sig, config, size_df)
     _print_summary(ui, summ, sig)
     _print_size(ui, size_df)
@@ -139,8 +163,10 @@ def cmd_experiment(a, ui):
 
 
 def _print_summary(ui, summ, sig):
+    """In bảng AUC cho từng (giao thức, nhóm lịch sử), tô đậm dòng AUC cao nhất,"""
     from .model import PROPOSED
     for (proto, bucket), g in summ.groupby(["protocol", "bucket"], sort=False):
+        # mỗi (giao thức, nhóm lịch sử) in một bảng; dòng có AUC cao nhất được tô đậm
         label = "cold-start: người dùng test chưa từng xuất hiện" if proto == "cold" else \
             f"warm: người dùng có {bucket} lịch sử trong train" if bucket != "all" else "warm: toàn bộ tập test"
         best = g["auc_mean"].max()
@@ -150,6 +176,7 @@ def _print_summary(ui, summ, sig):
                  title=f"{label} (n≈{int(g['n'].iloc[0]):,}, {int(g['seeds'].iloc[0])} seed)",
                  highlight_row=lambda i, r: abs(g.iloc[i]["auc_mean"] - best) < 1e-12)
     if len(sig):
+        # bảng kiểm định: ΔAUC, khoảng tin cậy 95%, p-value bootstrap và t-test
         rows = [(f"{r.protocol}/{r.bucket}", r.vs, f"{r.delta_auc:+.4f}", f"[{r.ci95_low:+.3f}, {r.ci95_high:+.3f}]",
                  (f"<{1 / r.n_boot:.3f}" if r.p_bootstrap == 0 else _fmt(r.p_bootstrap, 3)), _fmt(r.p_ttest, 3), "có" if r.significant else "không")
                 for r in sig.itertuples()]
@@ -159,6 +186,7 @@ def _print_summary(ui, summ, sig):
 
 
 def _print_size(ui, size_df):
+    """In bảng kết quả đề xuất size: popular / body / hybrid, trùng đúng size và lệch ≤ 1 size."""
     from .experiment import summarize_size
     if size_df is None or not len(size_df):
         return
@@ -173,6 +201,7 @@ def _print_size(ui, size_df):
 
 
 def cmd_train(a, ui):
+    """Lệnh `sizerec train DATA`: huấn luyện mô hình đề xuất và lưu ra file .pt."""
     import numpy as np
     from .model import SPECS
     from .trainer import Prepared, metrics, predict, save_bundle, train_model, tune_decision
@@ -185,16 +214,20 @@ def cmd_train(a, ui):
     r = rng.rand(len(data))
     tr, va = np.where(r >= a.val_frac)[0], np.where(r < a.val_frac)[0]
     ui.step(f"Huấn luyện [bold]{a.model}[/bold] trên {len(tr):,} tương tác, kiểm định trên {len(va):,}")
+    # tiền xử lý học CHỈ trên phần train (trainer.Prepared)
     prep = Prepared(data, tr, va)
     hp = _hparams(a)
+    # huấn luyện, in tiến độ từng epoch
     m = train_model(prep, SPECS[a.model], hp, a.seed,
                     on_epoch=lambda h: ui.log(f"  epoch {h['epoch']:2d}  train NLL={h['train_nll']:.4f}  "
                                               f"val AUC={h['val_auc']:.4f}  ({h['sec']:.1f}s)"))
     p_va = predict(m, prep.tensors["val"])
+    # trọng số quyết định chọn trên VAL, lưu vào file để dùng khi cần
     w = tune_decision(p_va, prep.y("val"))
     met = metrics(prep.y("val"), p_va, w)
     out = a.output or os.path.join("models", f"{data.name}_{a.model}.pt")
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+    # lưu toàn bộ (trọng số + bộ mã hoá + SizeModel) vào 1 file .pt
     save_bundle(out, m, prep, SPECS[a.model], hp, extra={
         "dataset": data.name, "model_name": a.model, "val_metrics": met, "decision_weights": w.tolist(),
         "trained_at": datetime.now().isoformat(timespec="seconds"), "version": __version__,
@@ -203,9 +236,11 @@ def cmd_train(a, ui):
 
 
 def cmd_inspect(a, ui):
+    """Lệnh `sizerec inspect MODEL`: đọc file .pt và in thông tin (cấu hình, siêu tham số,"""
     from .trainer import Bundle
     _check_file(ui, a.model)
     b = Bundle(a.model)
+    # b = mô hình đã nạp; e = thông tin phụ lưu lúc train
     e = b.extra
     sizes = b.indexer.sizes()
     ui.kv([("Bộ dữ liệu", e.get("dataset")), ("Cấu hình", e.get("model_name")), ("Spec", b.spec.to_dict()),
@@ -218,21 +253,25 @@ def cmd_inspect(a, ui):
 
 
 def cmd_recommend(a, ui):
+    """Lệnh `sizerec recommend MODEL --item ID`: gợi ý size và giải thích."""
     from .recommend import FIT_LABELS, TERM_LABELS, body_contributions, recommend
     from .trainer import Bundle
     _check_file(ui, a.model)
     b = Bundle(a.model)
+    # gom các số đo khách nhập từ dòng lệnh thành dict
     body = {k: getattr(a, k) for k in ["height", "weight", "age", "bust_size", "bra_size", "cup", "bust",
                                         "waist", "hips", "shoe", "body_type"]}
     if a.user is None and not any(v for k, v in body.items()):
         ui.warn("Không có user_id và không có số đo nào: mô hình chỉ dựa vào thông tin sản phẩm.")
     try:
+        # GỢI Ý SIZE (recommend.py)
         r = recommend(b, a.item, a.user, body, context=a.occasion or "unknown")
     except (KeyError, ValueError) as ex:
         ui.error(str(ex).strip("'\""))
         sys.exit(2)
     if a.json:
         if a.explain:
+            # --json: in kết quả dạng JSON (cho chương trình khác đọc)
             r["body_contributions"] = body_contributions(b, body)
         print(json.dumps(r, ensure_ascii=False, indent=2))
         return
@@ -267,14 +306,18 @@ def cmd_recommend(a, ui):
                  f"{th['theta_small']:.3f} ≤ t ≤ {th['theta_large']:.3f} → {FIT_LABELS['fit']}; "
                  f"t > {th['theta_large']:.3f} → {FIT_LABELS['large']}")
         ui.print("  Thành phần dương đẩy về phía 'rộng', âm đẩy về phía 'chật'.")
+        # --explain phần 3: số đo nào ảnh hưởng mạnh nhất (phần tuyến tính g(x))
         contrib = body_contributions(b, body)
         if contrib:
             ui.table(["Đặc trưng cơ thể (phần tuyến tính g)", "z-score", "Đóng góp"],
                      [(c["feature"], f"{c['value_z']:+.2f}", f"{c['contribution']:+.3f}") for c in contrib])
 
 
-# ============================================================================ parser
+# ════════════════════════════════════════════════════════════════════════════
+#  PHẦN C. KHAI BÁO THAM SỐ + HÀM main()
+# ════════════════════════════════════════════════════════════════════════════
 def build_parser():
+    """Khai báo toàn bộ lệnh con và tham số dòng lệnh bằng argparse."""
     from .experiment import DEFAULT_MODELS
     from .model import PROPOSED, SPECS
     p = argparse.ArgumentParser(prog="sizerec", description="Hybrid Matrix Factorization cho gợi ý size (ModCloth / RentTheRunway).",
@@ -351,7 +394,9 @@ def build_parser():
 
 
 def main(argv=None):
+    """ĐIỂM VÀO CỦA CHƯƠNG TRÌNH. Mọi lệnh `python -m sizerec ...` đều bắt đầu ở đây."""
     p = build_parser()
+    # phân tích tham số dòng lệnh (argv=None nghĩa là lấy từ sys.argv)
     a = p.parse_args(argv)
     ui = UI(quiet=a.quiet, color=not a.no_color)
     if a.threads:
@@ -368,6 +413,7 @@ def main(argv=None):
         p.print_help()
         return 0
     try:
+        # gọi hàm cmd_* tương ứng với lệnh con
         a.fn(a, ui)
     except KeyboardInterrupt:
         ui.error("Đã dừng theo yêu cầu.")
